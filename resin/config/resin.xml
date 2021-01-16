@@ -1,0 +1,474 @@
+<!--
+        - Resin 4.0 configuration file.
+  -->
+<resin
+    xmlns="http://caucho.com/ns/resin"
+    xmlns:resin="urn:java:com.caucho.resin">
+    <!-- property-based Resin configuration -->
+    <resin:properties path="${__DIR__}/resin.properties" optional="true"/>
+    <resin:if test="${properties_import_url}">
+        <resin:properties path="${properties_import_url}"
+                    optional="true" recover="true"/>
+    </resin:if>
+    <!-- Logging configuration for the JDK logging API -->
+    <log-handler name="" level="all" path="stdout:"
+               timestamp="[%y-%m-%d %H:%M:%S.%s]"
+               format=" {${thread}} ${log.message}"/>
+    <!--
+            - Alternative pseudo-TTCC log format
+     -
+     - <log-handler name="" level="all" path="stdout:"
+     -           timestamp="%y-%m-%d %H:%M:%S.%s"
+     -           format=" [${thread}] ${log.level} ${log.shortName} - ${log.message}"/>
+    -->
+    <!--
+            - level='info' for production
+     - 'fine' or 'finer' for development and troubleshooting
+    -->
+    <logger name="" level="${log_level?:'info'}"/>
+    <logger name="com.caucho.java" level="config"/>
+    <logger name="com.caucho.loader" level="config"/>
+    <!--
+            - Default configuration applied to all clusters, including
+     - HTTP, HTTPS, and /resin-admin configuration.
+    -->
+    <resin:import path="${__DIR__}/cluster-default.xml"/>
+    <!--
+            - health configuration
+    -->
+    <resin:import path="${__DIR__}/health.xml"/>
+    <!--
+            - Remote management requires at least one enabled admin user.
+    -->
+    <resin:AdminAuthenticator>
+        <user name="${admin_user}" password="${admin_password}"/>
+        <resin:import path="${__DIR__}/admin-users.xml" optional="true"/>
+    </resin:AdminAuthenticator>
+    <!--
+            - For clustered systems, create a password in as cluster_system_key
+    -->
+    <cluster-system-key>${cluster_system_key}</cluster-system-key>
+    <!--
+            - For production sites, change dependency-check-interval to something
+     - like 600s, so it only checks for updates every 10 minutes.
+    -->
+    <dependency-check-interval>${dependency_check_interval?:'2s'}</dependency-check-interval>
+    <!-- For resin.properties dynamic cluster joining -->
+    <home-cluster>${home_cluster}</home-cluster>
+    <home-server>${home_server}</home-server>
+    <elastic-server>${elastic_server}</elastic-server>
+    <elastic-dns>${elastic_dns}</elastic-dns>
+    <!--
+            - Configures the main application cluster.  Load-balancing configurations
+     - will also have a web cluster.
+    -->
+    <cluster id="ksxing-web-exam">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-exam/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=utf-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=768M</jvm-arg>
+            <jvm-arg>-XX:PermSize=512M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9045">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-exam/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-exam" address="127.0.0.1" port="9145"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-exam/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-exam/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-exam/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-exam/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-exam/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-login">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-login/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=utf-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9046">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-login/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-login" address="127.0.0.1" port="9146"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-login/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-login/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-login/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-login/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-login/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-index">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-index/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=utf-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9047">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-index/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-index" address="127.0.0.1" port="9147"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-index/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-index/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-index/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-index/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-index/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-analysis">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-analysis/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=utf-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=768M</jvm-arg>
+            <jvm-arg>-XX:PermSize=512M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9048">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-analysis/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-analysis" address="127.0.0.1" port="9148"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-analysis/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-analysis/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-analysis/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-analysis/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-analysis/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-course">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-course/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=utf-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9049">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-course/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-course" address="127.0.0.1" port="9149"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-course/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-course/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-course/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-course/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-course/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-examadmin">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-examadmin/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9050">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-examadmin/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-examadmin" address="127.0.0.1" port="9150"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-examadmin/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-examadmin/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-examadmin/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-examadmin/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-examadmin/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-setting">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-setting/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9051">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-setting/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-setting" address="127.0.0.1" port="9151"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-setting/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-setting/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-setting/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-setting/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-setting/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-process">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-process/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9052">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-process/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-process" address="127.0.0.1" port="9152"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-process/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-process/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-process/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-process/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-process/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-baseinfo">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-baseinfo/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9053">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-baseinfo/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-baseinfo" address="127.0.0.1" port="9153"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-baseinfo/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-baseinfo/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-baseinfo/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-baseinfo/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-baseinfo/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+    <cluster id="ksxing-web-data">
+        <character-encoding>UTF-8</character-encoding>
+        <access-log path='/home/work/log/ksxing-web-data/access.log'
+                  format='%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" "%{SessionId}o" "%{estimated}o"'
+                  rollover-period="1D"/>
+        <root-directory>.</root-directory>
+        <server-default>
+            <jvm-arg>-Dfile.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Dsun.jnu.encoding=UTF-8</jvm-arg>
+            <jvm-arg>-Xms1024m</jvm-arg>
+            <jvm-arg>-Xmx1024m</jvm-arg>
+            <jvm-arg>-XX:SurvivorRatio=8</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDetails</jvm-arg>
+            <jvm-arg>-XX:+PrintGCTimeStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintGCDateStamps</jvm-arg>
+            <jvm-arg>-XX:+PrintFlagsFinal</jvm-arg>
+            <jvm-arg>-XX:MaxPermSize=640M</jvm-arg>
+            <jvm-arg>-XX:PermSize=384M</jvm-arg>
+            <thread-max>4096</thread-max>
+            <thread-idle-max>40</thread-idle-max>
+            <thread-idle-min>20</thread-idle-min>
+            <http address="*" port="9054">
+                <accept-thread-max>256</accept-thread-max>
+                <accept-thread-min>32</accept-thread-min>
+                <connection-max>3096</connection-max>
+                <port-thread-max>3096</port-thread-max>
+            </http>
+            <keepalive-max>1024</keepalive-max>
+            <keepalive-timeout>30s</keepalive-timeout>
+            <jvm-arg>-Xloggc:/home/work/log/ksxing-web-data/gc.log</jvm-arg>
+        </server-default>
+        <server id="ksxing-web-data" address="127.0.0.1" port="9154"></server>
+        <host id="" root-directory=".">
+            <web-app id="/" document-directory="/home/work/bin/ksxing-web-data/ksxing-web-1.0-SNAPSHOT" archive-path="/home/work/bin/ksxing-web-data/ksxing-web-1.0-SNAPSHOT.war"/>
+            <access-log path='/home/work/log/ksxing-web-data/access.log'
+                format='%h %u %T "%r" "%{Referer}i" "%{User-Agent}i"'
+                rollover-period="1D"/>
+            <stdout-log path='/home/work/log/ksxing-web-data/ksxing-web.stdout.log' rollover-period='1D'/>
+            <stderr-log path='/home/work/log/ksxing-web-data/ksxing-web.stderr.log' rollover-period='1D'/>
+        </host>
+    </cluster>
+</resin>
